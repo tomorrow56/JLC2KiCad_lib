@@ -1,0 +1,242 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.625rem;
+  /* Deep navy dark theme */
+  --background: oklch(0.12 0.015 255);
+  --foreground: oklch(0.92 0.008 255);
+  --card: oklch(0.16 0.018 255);
+  --card-foreground: oklch(0.92 0.008 255);
+  --popover: oklch(0.16 0.018 255);
+  --popover-foreground: oklch(0.92 0.008 255);
+  /* Gold accent */
+  --primary: oklch(0.78 0.14 85);
+  --primary-foreground: oklch(0.12 0.015 255);
+  --secondary: oklch(0.22 0.02 255);
+  --secondary-foreground: oklch(0.85 0.008 255);
+  --muted: oklch(0.20 0.018 255);
+  --muted-foreground: oklch(0.58 0.012 255);
+  --accent: oklch(0.24 0.025 255);
+  --accent-foreground: oklch(0.92 0.008 255);
+  --destructive: oklch(0.55 0.18 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.26 0.02 255);
+  --input: oklch(0.20 0.018 255);
+  --ring: oklch(0.78 0.14 85);
+  --chart-1: oklch(0.78 0.14 85);
+  --chart-2: oklch(0.65 0.15 145);
+  --chart-3: oklch(0.65 0.12 220);
+  --chart-4: oklch(0.70 0.14 300);
+  --chart-5: oklch(0.60 0.18 25);
+  --sidebar: oklch(0.14 0.016 255);
+  --sidebar-foreground: oklch(0.92 0.008 255);
+  --sidebar-primary: oklch(0.78 0.14 85);
+  --sidebar-primary-foreground: oklch(0.12 0.015 255);
+  --sidebar-accent: oklch(0.22 0.02 255);
+  --sidebar-accent-foreground: oklch(0.92 0.008 255);
+  --sidebar-border: oklch(0.26 0.02 255);
+  --sidebar-ring: oklch(0.78 0.14 85);
+  /* Custom tokens */
+  --success: oklch(0.65 0.15 145);
+  --warning: oklch(0.75 0.14 65);
+  --log-info: oklch(0.70 0.10 220);
+  --log-warn: oklch(0.75 0.14 65);
+  --log-error: oklch(0.60 0.18 25);
+}
+
+/* Single dark theme — no .dark override needed */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+@layer components {
+  /**
+   * Custom container utility that centers content and adds responsive padding.
+   *
+   * This overrides Tailwind's default container behavior to:
+   * - Auto-center content (mx-auto)
+   * - Add responsive horizontal padding
+   * - Set max-width for large screens
+   *
+   * Usage: <div className="container">...</div>
+   *
+   * For custom widths, use max-w-* utilities directly:
+   * <div className="max-w-6xl mx-auto px-4">...</div>
+   */
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem; /* 16px - mobile padding */
+    padding-right: 1rem;
+  }
+
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem; /* 32px - desktop padding */
+      padding-right: 2rem;
+      max-width: 1280px; /* Standard content width */
+    }
+  }
+}
+/* ── Custom utilities ── */
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
+
+/* Gold gradient text */
+.text-gold-gradient {
+  background: linear-gradient(135deg, oklch(0.88 0.16 85), oklch(0.68 0.12 75));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Log terminal */
+.log-terminal {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+
+/* Tag chip */
+.part-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  background: oklch(0.24 0.025 255);
+  border: 1px solid oklch(0.32 0.04 255);
+  border-radius: 0.375rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  color: oklch(0.88 0.12 85);
+  transition: all 0.15s;
+}
+.part-tag:hover { border-color: oklch(0.78 0.14 85 / 0.6); }
+
+/* Glow button */
+.btn-glow {
+  box-shadow: 0 0 0 0 oklch(0.78 0.14 85 / 0);
+  transition: box-shadow 0.3s;
+}
+.btn-glow:hover:not(:disabled) {
+  box-shadow: 0 0 20px oklch(0.78 0.14 85 / 0.35);
+}
+
+/* Card glass effect */
+.card-glass {
+  background: oklch(0.16 0.018 255 / 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.28 0.022 255);
+}
+
+/* Status badge colors */
+.status-pending  { color: oklch(0.70 0.10 220); }
+.status-running  { color: oklch(0.75 0.14 65); }
+.status-done     { color: oklch(0.65 0.15 145); }
+.status-error    { color: oklch(0.60 0.18 25); }
+
+/* Animated pulse ring */
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 oklch(0.78 0.14 85 / 0.4); }
+  70%  { box-shadow: 0 0 0 8px oklch(0.78 0.14 85 / 0); }
+  100% { box-shadow: 0 0 0 0 oklch(0.78 0.14 85 / 0); }
+}
+.animate-pulse-ring { animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite; }
+
+/* Divider with text */
+.divider-text {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.divider-text::before, .divider-text::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
