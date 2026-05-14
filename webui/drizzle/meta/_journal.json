@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1778191131798,
+      "tag": "0000_chunky_forge",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1778191282574,
+      "tag": "0001_wide_gunslinger",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1778451813998,
+      "tag": "0002_bitter_starjammers",
+      "breakpoints": true
+    }
+  ]
+}
