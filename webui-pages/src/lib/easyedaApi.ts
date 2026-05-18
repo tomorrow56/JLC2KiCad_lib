@@ -105,11 +105,21 @@ export async function fetchComponentData(uuid: string): Promise<EasyEDAComponent
   return data.result;
 }
 
-/** Fetch 3D model OBJ text */
+/**
+ * modules.easyeda.com returns `access-control-allow-origin: *`,
+ * so we can fetch directly without a CORS proxy.
+ */
+async function fetchModulesDirect(url: string): Promise<Response> {
+  const resp = await fetch(url, { signal: AbortSignal.timeout(30000) });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} from ${url}`);
+  return resp;
+}
+
+/** Fetch 3D model OBJ text (direct – no CORS proxy needed) */
 export async function fetch3DModelObj(uuid: string): Promise<string | null> {
   const url = `https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/${uuid}`;
   try {
-    const resp = await fetchWithProxy(url);
+    const resp = await fetchModulesDirect(url);
     const text = await resp.text();
     if (text && text.length > 10) return text;
   } catch {
@@ -119,13 +129,13 @@ export async function fetch3DModelObj(uuid: string): Promise<string | null> {
 }
 
 /**
- * Fetch STEP model as ArrayBuffer
+ * Fetch STEP model as ArrayBuffer (direct – no CORS proxy needed)
  * URL: https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/{svgnode_uuid}
  */
 export async function fetchStepModel(uuid: string): Promise<ArrayBuffer | null> {
   const url = `https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/${uuid}`;
   try {
-    const resp = await fetchWithProxy(url, true);
+    const resp = await fetchModulesDirect(url);
     const buf = await resp.arrayBuffer();
     if (buf.byteLength > 100) return buf;
   } catch {
