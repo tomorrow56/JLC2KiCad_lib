@@ -132,7 +132,7 @@ export async function fetch3DModelObj(uuid: string): Promise<string | null> {
  * Fetch STEP model as ArrayBuffer (direct – no CORS proxy needed)
  * URL: https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/{svgnode_uuid}
  */
-export async function fetchStepModel(uuid: string): Promise<ArrayBuffer | null> {
+export async function fetchStepModel(uuid: string ): Promise<ArrayBuffer | null> {
   const url = `https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/${uuid}`;
   try {
     const resp = await fetchModulesDirect(url);
