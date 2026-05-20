@@ -74,13 +74,18 @@ function getModelsLabel(models: string | string[]) {
 }
 
 export default function History() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const { t, lang } = useI18n();
   const [records, setRecords] = useState<ConversionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fetchHistory = useCallback(async () => {
+    // Don't fetch history for unauthenticated users
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/convert/history");
@@ -92,11 +97,12 @@ export default function History() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+    // Wait for auth check to complete before fetching
+    if (!authLoading) fetchHistory();
+  }, [fetchHistory, authLoading]);
 
   const handleDelete = async (id: number) => {
     setDeletingId(id);

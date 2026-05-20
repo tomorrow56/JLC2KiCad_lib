@@ -75,13 +75,12 @@ export async function getConversionById(id: number): Promise<Conversion | undefi
   return result[0];
 }
 
-export async function listConversions(userId?: number): Promise<Conversion[]> {
+export async function listConversions(userId?: number | null): Promise<Conversion[]> {
+  // Only return history for authenticated users
+  if (userId === undefined || userId === null) return [];
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  if (userId !== undefined) {
-    return db.select().from(conversions).where(eq(conversions.userId, userId)).orderBy(desc(conversions.createdAt)).limit(50);
-  }
-  return db.select().from(conversions).orderBy(desc(conversions.createdAt)).limit(50);
+  return db.select().from(conversions).where(eq(conversions.userId, userId)).orderBy(desc(conversions.createdAt)).limit(50);
 }
 
 export async function deleteConversion(id: number): Promise<void> {

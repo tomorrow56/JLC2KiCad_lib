@@ -119,7 +119,7 @@ async function fetchModulesDirect(url: string): Promise<Response> {
 export async function fetch3DModelObj(uuid: string): Promise<string | null> {
   const url = `https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/${uuid}`;
   try {
-    const resp = await fetchModulesDirect(url );
+    const resp = await fetchModulesDirect(url);
     const text = await resp.text();
     if (text && text.length > 10) return text;
   } catch {
@@ -135,7 +135,7 @@ export async function fetch3DModelObj(uuid: string): Promise<string | null> {
 export async function fetchStepModel(uuid: string ): Promise<ArrayBuffer | null> {
   const url = `https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/${uuid}`;
   try {
-    const resp = await fetchModulesDirect(url );
+    const resp = await fetchModulesDirect(url);
     const buf = await resp.arrayBuffer();
     if (buf.byteLength > 100) return buf;
   } catch {
