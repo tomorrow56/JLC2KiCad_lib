@@ -218,7 +218,8 @@ router.get("/download/:jobId", async (req: Request, res: Response) => {
 router.get("/history", async (req: Request, res: Response) => {
   try {
     const user = await tryGetUser(req);
-    const items = await listConversions(user?.id);
+    // Only return history for authenticated users; unauthenticated users get empty list
+    const items = await listConversions(user?.id ?? null);
     // Strip logs from history to keep response small
     const stripped = items.map(({ logs: _logs, ...rest }) => rest);
     res.json({ items: stripped });
