@@ -29,11 +29,11 @@ const LAYER_MAP: Record<string, string> = {
   "7": "F.Mask",
   "8": "B.Mask",
   "10": "Edge.Cuts",
-  "11": "User.Comments",
+  "11": "Cmts.User",
   "12": "F.Fab",
-  "99": "User.Comments",
-  "100": "User.Comments",
-  "101": "User.Comments",
+  "99": "Cmts.User",
+  "100": "Cmts.User",
+  "101": "Cmts.User",
 };
 
 // ─── Footprint context ────────────────────────────────────────────────────────
