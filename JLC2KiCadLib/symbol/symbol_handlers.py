@@ -107,7 +107,7 @@ def h_P(data, translation, kicad_symbol):
     10 :
     11 :
     12 :
-    13 :
+    13 : pin name
     14 :
     15 :
     16 :
@@ -115,7 +115,7 @@ def h_P(data, translation, kicad_symbol):
     18 :
     19 :
     20 :
-    21 :
+    21 : pin number as rendered on the schematic
     22 :
     23 :
     24 : number size
@@ -136,7 +136,7 @@ def h_P(data, translation, kicad_symbol):
     else:
         electrical_type = "unspecified"
 
-    pin_number = data[2]
+    pin_number = data[21] if data[21] else data[2]
     pin_name = data[13]
 
     x1 = round(mil2mm(float(data[3]) - translation[0]), 3)
