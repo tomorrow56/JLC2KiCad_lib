@@ -36,6 +36,27 @@ const LAYER_MAP: Record<string, string> = {
   "101": "Cmts.User",
 };
 
+// ─── Courtyard generation constants ─────────────────────────────────────────────
+const CRTYD_CLEARANCE = 0.25;
+const CRTYD_WIDTH = 0.05;
+const CRTYD_GRID = 0.01;
+
+function snapToGrid(value: number, grid = CRTYD_GRID): number {
+  return Math.round(Math.round(value / grid) * grid * 1_000_000) / 1_000_000;
+}
+
+// Layers considered when computing the courtyard bounding box.
+const CRTYD_RELEVANT_LAYERS = new Set([
+  "F.Cu",
+  "B.Cu",
+  "F.Paste",
+  "B.Paste",
+  "F.Mask",
+  "B.Mask",
+  "F.Fab",
+  "Edge.Cuts",
+]);
+
 // ─── Footprint context ────────────────────────────────────────────────────────
 interface FootprintContext {
   lines: string[];
@@ -43,6 +64,10 @@ interface FootprintContext {
   minX: number;
   maxY: number;
   minY: number;
+  crtydMaxX: number;
+  crtydMaxY: number;
+  crtydMinX: number;
+  crtydMinY: number;
   hasTHT: boolean;
   modelLines: string[];
   footprintName: string;
@@ -67,6 +92,10 @@ function newCtx(
     minX: Infinity,
     maxY: -Infinity,
     minY: Infinity,
+    crtydMaxX: -Infinity,
+    crtydMaxY: -Infinity,
+    crtydMinX: Infinity,
+    crtydMinY: Infinity,
     hasTHT: false,
     modelLines: [],
     footprintName,
@@ -85,6 +114,21 @@ function updateBounds(ctx: FootprintContext, x: number, y: number) {
   ctx.minY = Math.min(ctx.minY, y);
 }
 
+function updateCrtydBounds(
+  ctx: FootprintContext,
+  layer: string,
+  minX: number,
+  maxX: number,
+  minY: number,
+  maxY: number
+) {
+  if (!CRTYD_RELEVANT_LAYERS.has(layer)) return;
+  ctx.crtydMinX = Math.min(ctx.crtydMinX, minX);
+  ctx.crtydMaxX = Math.max(ctx.crtydMaxX, maxX);
+  ctx.crtydMinY = Math.min(ctx.crtydMinY, minY);
+  ctx.crtydMaxY = Math.max(ctx.crtydMaxY, maxY);
+}
+
 // ─── Handlers (with translation applied) ─────────────────────────────────────
 
 /**
@@ -100,6 +144,14 @@ function h_TRACK(data: string[], ctx: FootprintContext, tx: number, ty: number) 
     const ex = pts[2 * i + 2] + tx, ey = pts[2 * i + 3] + ty;
     updateBounds(ctx, sx, sy);
     updateBounds(ctx, ex, ey);
+    updateCrtydBounds(
+      ctx,
+      layer,
+      Math.min(sx, ex),
+      Math.max(sx, ex),
+      Math.min(sy, ey),
+      Math.max(sy, ey)
+    );
     ctx.lines.push(
       `  (fp_line (start ${fmt(sx)} ${fmt(sy)}) (end ${fmt(ex)} ${fmt(ey)}) (layer "${layer}") (width ${fmt(width)}))`
     );
@@ -177,6 +229,26 @@ function h_PAD(data: string[], ctx: FootprintContext, tx: number, ty: number) {
     if (padType === "thru_hole") drillStr = `(drill ${fmt(drillDiameter)})`;
   }
 
+  // update courtyard bounding box. Pads are always relevant.
+  if (shapeType === "POLYGON" && pts && pts.length > 0) {
+    const relX: number[] = [];
+    const relY: number[] = [];
+    for (let i = 0; i < pts.length - 1; i += 2) {
+      relX.push(mil2mm(pts[i]));
+      relY.push(mil2mm(pts[i + 1]));
+    }
+    ctx.crtydMinX = Math.min(ctx.crtydMinX, at[0] + Math.min(...relX));
+    ctx.crtydMaxX = Math.max(ctx.crtydMaxX, at[0] + Math.max(...relX));
+    ctx.crtydMinY = Math.min(ctx.crtydMinY, at[1] + Math.min(...relY));
+    ctx.crtydMaxY = Math.max(ctx.crtydMaxY, at[1] + Math.max(...relY));
+  } else {
+    const halfDiag = Math.sqrt((size[0] / 2) ** 2 + (size[1] / 2) ** 2);
+    ctx.crtydMinX = Math.min(ctx.crtydMinX, at[0] - halfDiag);
+    ctx.crtydMaxX = Math.max(ctx.crtydMaxX, at[0] + halfDiag);
+    ctx.crtydMinY = Math.min(ctx.crtydMinY, at[1] - halfDiag);
+    ctx.crtydMaxY = Math.max(ctx.crtydMaxY, at[1] + halfDiag);
+  }
+
   updateBounds(ctx, at[0], at[1]);
   ctx.lines.push(
     `  (pad "${padNumber}" ${padType} ${kicadShape} (at ${fmt(at[0])} ${fmt(at[1])}${rotation !== 0 ? ` ${fmt(rotation)}` : ""}) (size ${fmt(size[0])} ${fmt(size[1])}) (layers ${padLayers})${drillStr ? " " + drillStr : ""}${customPrimStr ? " " + customPrimStr : ""})`
@@ -217,6 +289,14 @@ function h_ARC(data: string[], ctx: FootprintContext, tx: number, ty: number) {
       const radius = radiusX;
       const cx = sweepFlag === 1 ? startX + radius : startX - radius;
       const cy = startY;
+      updateCrtydBounds(
+        ctx,
+        layer,
+        cx + tx - radius,
+        cx + tx + radius,
+        cy + ty - radius,
+        cy + ty + radius
+      );
       ctx.lines.push(
         `  (fp_circle (center ${fmt(cx + tx)} ${fmt(cy + ty)}) (end ${fmt(cx + radius + tx)} ${fmt(cy + ty)}) (layer "${layer}") (width ${fmt(width)}))`
       );
@@ -265,6 +345,15 @@ function h_ARC(data: string[], ctx: FootprintContext, tx: number, ty: number) {
     const length = sqrt(lengthSq);
     const cenX = midX + perpX * length;
     const cenY = midY + perpY * length;
+    const crtydRadius = Math.max(radiusX, radiusY);
+    updateCrtydBounds(
+      ctx,
+      layer,
+      cenX + tx - crtydRadius,
+      cenX + tx + crtydRadius,
+      cenY + ty - crtydRadius,
+      cenY + ty + crtydRadius
+    );
 
     // Calculate arc midpoint for KiCad 6+ start/mid/end format
     const startAngle = Math.atan2(startY - cenY, startX - cenX);
@@ -298,6 +387,7 @@ function h_CIRCLE(data: string[], ctx: FootprintContext, tx: number, ty: number)
   const r = mil2mm(data[2]);
   const width = mil2mm(data[3]);
   const layer = LAYER_MAP[data[4]] ?? "F.SilkS";
+  updateCrtydBounds(ctx, layer, cx - r, cx + r, cy - r, cy + r);
   ctx.lines.push(
     `  (fp_circle (center ${fmt(cx)} ${fmt(cy)}) (end ${fmt(cx + r)} ${fmt(cy)}) (layer "${layer}") (width ${fmt(width)}))`
   );
@@ -335,7 +425,11 @@ function h_SOLIDREGION(data: string[], ctx: FootprintContext, tx: number, ty: nu
     }
   }
   if (points.length < 2) return;
-  const mmPts = points.map(([x, y]) => `(xy ${fmt(mil2mm(x) + tx)} ${fmt(mil2mm(y) + ty)})`);
+  const mmPoints = points.map(([x, y]) => [mil2mm(x) + tx, mil2mm(y) + ty]);
+  const xs = mmPoints.map((p) => p[0]);
+  const ys = mmPoints.map((p) => p[1]);
+  updateCrtydBounds(ctx, layer, Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys));
+  const mmPts = mmPoints.map(([x, y]) => `(xy ${fmt(x)} ${fmt(y)})`);
   ctx.lines.push(
     `  (fp_poly (pts ${mmPts.join(" ")}) (layer "${layer}") (width 0) (fill solid))`
   );
@@ -387,6 +481,7 @@ function h_RECT(data: string[], ctx: FootprintContext, tx: number, ty: number) {
   const width = mil2mm(data[7]);
   updateBounds(ctx, xs, ys);
   updateBounds(ctx, xs + xd, ys + yd);
+  updateCrtydBounds(ctx, layer, Math.min(xs, xs + xd), Math.max(xs, xs + xd), Math.min(ys, ys + yd), Math.max(ys, ys + yd));
   if (width === 0) {
     ctx.lines.push(
       `  (fp_rect (start ${fmt(xs)} ${fmt(ys)}) (end ${fmt(xs + xd)} ${fmt(ys + yd)}) (layer "${layer}") (width 0) (fill solid))`
@@ -406,6 +501,10 @@ function h_HOLE(data: string[], ctx: FootprintContext, tx: number, ty: number) {
   const x = mil2mm(data[0]) + tx;
   const y = mil2mm(data[1]) + ty;
   const r = mil2mm(data[2]);
+  ctx.crtydMinX = Math.min(ctx.crtydMinX, x - r);
+  ctx.crtydMaxX = Math.max(ctx.crtydMaxX, x + r);
+  ctx.crtydMinY = Math.min(ctx.crtydMinY, y - r);
+  ctx.crtydMaxY = Math.max(ctx.crtydMaxY, y + r);
   ctx.lines.push(
     `  (pad "" np_thru_hole circle (at ${fmt(x)} ${fmt(y)}) (size ${fmt(r * 2)} ${fmt(r * 2)}) (drill ${fmt(r * 2)}) (layers "*.Cu" "*.Mask"))`
   );
@@ -529,6 +628,22 @@ export function generateFootprint(
   }
 
   const attr = ctx.hasTHT ? "through_hole" : "smd";
+
+  // Generate F.CrtYd courtyard from copper/fab/paste/mask/edge-cuts bounds
+  if (
+    isFinite(ctx.crtydMinX) &&
+    isFinite(ctx.crtydMaxX) &&
+    isFinite(ctx.crtydMinY) &&
+    isFinite(ctx.crtydMaxY)
+  ) {
+    const crtydStartX = snapToGrid(ctx.crtydMinX - CRTYD_CLEARANCE);
+    const crtydStartY = snapToGrid(ctx.crtydMinY - CRTYD_CLEARANCE);
+    const crtydEndX = snapToGrid(ctx.crtydMaxX + CRTYD_CLEARANCE);
+    const crtydEndY = snapToGrid(ctx.crtydMaxY + CRTYD_CLEARANCE);
+    ctx.lines.unshift(
+      `  (fp_rect (start ${fmt(crtydStartX)} ${fmt(crtydStartY)}) (end ${fmt(crtydEndX)} ${fmt(crtydEndY)}) (layer "F.CrtYd") (width ${fmt(CRTYD_WIDTH)}))`
+    );
+  }
 
   // Calculate reference/value/user text positions
   const cx = isFinite(ctx.minX) && isFinite(ctx.maxX) ? (ctx.minX + ctx.maxX) / 2 : 0;

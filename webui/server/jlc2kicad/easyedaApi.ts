@@ -17,7 +17,8 @@ export interface EasyEDAComponentData {
   description: string;
   docType: number;
   type: number;
-  lcsc?: { id: number; number: string };
+  lcsc?: { id?: number; number?: string; url?: string };
+  szlcsc?: { id?: number; number?: string; url?: string };
   dataStr: {
     head: {
       x: number;

@@ -43,6 +43,43 @@ function sanitizeName(name: string): string {
   return name.replace(/[/\\:*?"<>|]/g, "_");
 }
 
+function extractDatasheetLink(data: EasyEDAComponentData, fallback = ""): string {
+  const title = data.title ?? "";
+  const szlcsc = data.szlcsc ?? {};
+  const lcsc = data.lcsc ?? {};
+
+  const partId = szlcsc.id ?? lcsc.id;
+  if (partId) {
+    if (title) {
+      const safeTitle = encodeURIComponent(title);
+      return `https://item.szlcsc.com/datasheet/${safeTitle}/${partId}.html`;
+    }
+    return `https://item.szlcsc.com/${partId}.html`;
+  }
+
+  const cPara = data.dataStr?.head?.c_para ?? {};
+  for (const key of [
+    "链接",
+    "link",
+    "Datasheet",
+    "datasheet",
+    "BOM_Datasheet",
+    "Datasheet_URL",
+    "URL",
+    "url",
+  ]) {
+    const val = cPara[key];
+    if (val && val.trim().startsWith("http")) {
+      return val.trim();
+    }
+  }
+
+  if (szlcsc.url) return String(szlcsc.url).trim();
+  if (lcsc.url) return String(lcsc.url).trim();
+
+  return fallback;
+}
+
 async function convertOne(
   componentId: string,
   opts: ConvertOptions,
@@ -99,7 +136,7 @@ async function convertOne(
   // Extract metadata
   const cPara = symbolData?.dataStr?.head?.c_para ?? {};
   const prefix = cPara.pre ?? "U";
-  const datasheetLink = cPara.link ?? "";
+  const datasheetLink = symbolData ? extractDatasheetLink(symbolData, "") : "";
   const footprintTitle = sanitizeName(
     footprintData?.title ?? componentName
   );
