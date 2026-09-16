@@ -116,9 +116,30 @@ By default, the library folder will be created in the execution directory. You c
 
 JLC2KiCadLib relies on the [KicadModTree](https://gitlab.com/kicad/libraries/kicad-footprint-generator) framework to generate the footprints. 
 
+## Testing
+
+The project has a pytest-based test suite in `test/`:
+
+* Unit tests (e.g. `test/test_courtyard.py`) run offline and exercise individual
+  handlers/helpers with synthetic data.
+* Integration tests (`test/test_components.py`) generate real components from
+  JLCPCB part numbers (defined in `test/component_cases.py`) and validate them
+  against KiCad's [KLC](https://klc.kicad.org/) rules, using the
+  `kicad-library-utils` git submodule.
+
+To run the tests:
+
+```bash
+git submodule update --init
+uv sync --group test
+uv run pytest                       # unit tests only
+uv run pytest -m integration        # integration tests (requires network access)
+```
+
 ## Notes
 
 * Even so I tested the script on a lot of components, be careful and always check the output footprint and symbol.
+* EasyEDA does not provide courtyard data, so footprints now get an auto-generated approximate courtyard (`F.CrtYd`, 0.25mm clearance around the copper/fab/paste/mask/edge-cuts bounding box), mirroring the approach used by KiCad's own EasyEDA importer.
 * I consider this project completed. I will continue to maintain it if a bug report is filed, but I will not develop new functionality in the near future. If you feel that an important feature is missing, please open an issue to discuss it, then you can fork this project with a new branch before submitting a PR. 
 
 ## License 
