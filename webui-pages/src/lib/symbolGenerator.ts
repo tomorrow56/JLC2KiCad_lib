@@ -104,8 +104,7 @@ function h_E(data: string[], tx: number, ty: number, ctx: SymbolCtx) {
  * data[18] = number_x ("354.5")
  * data[19] = number_y ("279")
  * data[20] = number_rotation ("0")
- * data[21] = pin_number_label ("1")
- * data[22] = number_anchor ("end")
+ * data[21] = pin number as rendered on the schematic ("1") * data[22] = number_anchor ("end")
  * data[23] = "" (empty)
  * data[24] = "" (number_size, may be empty)
  */
@@ -119,7 +118,7 @@ function h_P(data: string[], tx: number, ty: number, ctx: SymbolCtx) {
   };
 
   const electricalType = electricalTypeMap[data[1]] ?? "unspecified";
-  const pinNumber = data[2];
+  const pinNumber = data[21] ? data[21] : data[2];
   const pinName = data[13] ?? "~";
 
   const x1 = round3(mil2mm(parseFloat(data[3]) - tx));
