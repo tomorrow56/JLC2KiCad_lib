@@ -46,7 +46,11 @@ export interface EasyEDAComponentData {
 }
 
 // CORS proxy list (tried in order)
+// Public CORS proxies come and go; the first one (cors.raghu.workers.dev)
+// is currently functional as of 2026-09-16. If it stops working, replace it
+// with another public proxy or run your own (e.g. Cloudflare Workers).
 const CORS_PROXIES = [
+  (url: string) => `https://cors.raghu.workers.dev/?url=${encodeURIComponent(url)}`,
   (url: string) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
 ];
