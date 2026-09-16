@@ -230,7 +230,8 @@ function h_PAD(data: string[], ctx: FootprintContext, tx: number, ty: number) {
   }
 
   // update courtyard bounding box. Pads are always relevant.
-  if (shapeType === "POLYGON" && pts && pts.length > 0) {
+  if (shapeType === "POLYGON" && data[9]) {
+    const pts = data[9].split(" ").filter(Boolean).map(Number);
     const relX: number[] = [];
     const relY: number[] = [];
     for (let i = 0; i < pts.length - 1; i += 2) {
